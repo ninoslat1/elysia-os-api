@@ -1,14 +1,12 @@
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client } from "bun";
 import { env } from "../env";
 
 export const minio = new S3Client({
-  endpoint: "http://localhost:9000",
+  endpoint: env.BUCKET_URL,
   region: "us-east-1",
-  credentials: {
-    accessKeyId: env.BUCKET_USERNAME,
-    secretAccessKey: env.BUCKET_PASSWORD,
-  },
-  forcePathStyle: true,
+  accessKeyId: env.BUCKET_USERNAME,
+  secretAccessKey: env.BUCKET_PASSWORD,
+  bucket: env.BUCKET_NAME,
 });
 
 export const BUCKET = env.BUCKET_NAME;

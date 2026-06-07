@@ -1,10 +1,10 @@
 import cors from "@elysia/cors";
 import { Elysia } from "elysia";
-import { serveRoute } from "./routes/serve";
+import { assetsRoute } from "./routes/serve";
 
 const app = new Elysia()
   .use(cors())
-  .use(serveRoute)
+  .use(assetsRoute)
   .get("/", () => ({ message: "Flaplock API running" }))
   .listen(3000);
 

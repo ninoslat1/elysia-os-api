@@ -1,99 +1,58 @@
 import Elysia, { t } from "elysia";
+import { filterBySearch, listAllObjects, paginate } from "../lib/helper";
 import { minio } from "../lib/minio";
-import { GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { env } from "../env";
 
-export const serveRoute = new Elysia({ prefix: "/assets"})
-                            .get(
-                                "/", async ({query}) => {
-                                    const {search = "", page = 1, limit = 20} = query;
-                                    const allItems: { key: string; size: number; lastModified: Date }[] = [];
-                                    let continuationToken: string | undefined;
+export const assetsRoute = new Elysia({ prefix: "/assets" })
+  .get(
+    "/download/:key",
+    async ({ params, set }) => {
+      const key = decodeURIComponent(params.key);
+      const file = minio.file(key);
 
-                                    do {
-                                        const response = await minio.send(
-                                            new ListObjectsV2Command({
-                                                Bucket: env.BUCKET_NAME,
-                                                // Prefix: "public/",
-                                                ContinuationToken: continuationToken
-                                            })
-                                        );
+      if (!(await file.exists())) {
+        set.status = 404;
+        return { message: "File not found" };
+      }
 
-                                        for (const obj of response.Contents ?? []){
-                                            if (obj.Key) {
-                                                allItems.push({
-                                                    key: obj.Key,
-                                                    size: obj.Size ?? 0,
-                                                    lastModified: obj.LastModified ?? new Date(),
-                                                })
-                                            }
-                                        };
+      const stat = await file.stat();
+      const filename = key.split("/").pop() ?? "file";
 
-                                        continuationToken = response.NextContinuationToken;
-                                    } while (continuationToken) {
-                                        const filtered = search ? allItems.filter((item) => {
-                                            item.key.toLowerCase().includes(search.toLowerCase())
-                                        }) : allItems;
+      set.headers["Content-Type"] = stat.type ?? "application/octet-stream";
+      set.headers["Content-Disposition"] = `attachment; filename="${filename}"`;
 
-                                        const total = filtered.length;
-                                        const totalPages = Math.ceil(total / limit);
-                                        const offset = (page - 1) * limit;
-                                        const items = filtered.slice(offset, offset + limit).map((item) => ({
-                                            key: item.key,
-                                            filename: item.key.replace("public/", ""),
-                                            size: item.size,
-                                            lastModified: item.lastModified,
-                                            downloadUrl: `/assets/download/${encodeURIComponent(item.key)}`,
-                                        }));
+      return file.stream();
+    },
+    {
+      params: t.Object({ key: t.String() }),
+    },
+  )
+  .get(
+    "/releases/latest",
+    async ({ query, set }) => {
+      const { folder, filename } = query;
 
-                                        return {
-                                            data: items,
-                                            pagination: {
-                                            page,
-                                            limit,
-                                            total,
-                                            totalPages,
-                                            hasNext: page < totalPages,
-                                            hasPrev: page > 1,
-                                            },
-                                        };
-                                    }
-                                }, {
-                                    query: t.Object({
-                                        search: t.Optional(t.String()),
-                                        page: t.Optional(t.Numeric()),
-                                        limit: t.Optional(t.Numeric()),
-                                    }),
-                                }
-                            )
-                            .get("download/:key", async ({params, set}) => {
-                                const key = decodeURIComponent(params.key);
+      const key = folder ? `${folder}/${filename}` : filename;
+      const file = minio.file(key);
 
-                                    try {
-                                        const response = await minio.send(
-                                        new GetObjectCommand({
-                                            Bucket: env.BUCKET_NAME,
-                                            Key: key,
-                                        })
-                                        );
+      if (!(await file.exists())) {
+        set.status = 404;
+        return { message: "File not found" };
+      }
 
-                                        const filename = key.split("/").pop() ?? "file";
+      const stat = await file.stat();
 
-                                        set.headers["Content-Type"] =
-                                        response.ContentType ?? "application/octet-stream";
-                                        set.headers["Content-Disposition"] =
-                                        `attachment; filename="${filename}"`;
-
-                                        // Stream the file directly
-                                        return response.Body?.transformToWebStream();
-                                    } catch (err) {
-                                        set.status = 404;
-                                        return { message: "File not found" };
-                                    }
-                                    },
-                                    {
-                                    params: t.Object({
-                                        key: t.String(),
-                                    }),
-                                    }
-                                )
+      return {
+        key,
+        filename,
+        size: stat.size,
+        contentType: stat.type,
+        downloadUrl: `/assets/download/${encodeURIComponent(key)}`,
+      };
+    },
+    {
+      query: t.Object({
+        filename: t.String(),
+        folder: t.Optional(t.String()),
+      }),
+    },
+  );

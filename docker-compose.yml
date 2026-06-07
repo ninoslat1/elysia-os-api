@@ -1,0 +1,24 @@
+version: "3.7"
+
+services:
+  minio-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minio-gateway
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - BUCKET_NAME=flaplock
+      - BUCKET_USERNAME=mujiono
+      - BUCKET_PASSWORD=sap123ok
+      - BUCKET_URL=http://host.docker.internal:9000
+    restart: always
+    networks:
+      - minio_gateway_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  minio_gateway_network:
+    driver: bridge

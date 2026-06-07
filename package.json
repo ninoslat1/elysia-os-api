@@ -1,22 +1,25 @@
 {
   "name": "minio-gateway",
-  "module": "index.ts",
-  "type": "module",
   "private": true,
+  "type": "module",
+  "module": "index.ts",
   "scripts": {
-    "dev": "bun run --watch ./src/index.ts"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
+    "dev": "bun run --watch ./src/index.ts",
+    "fmt": "oxfmt",
+    "lint": "oxlint"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1063.0",
     "@elysia/cors": "^1.4.2",
     "@t3-oss/env-core": "^0.13.11",
     "elysia": "^1.4.28",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "oxfmt": "^0.53.0",
+    "oxlint": "^1.68.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
   }
 }
