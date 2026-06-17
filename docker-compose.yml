@@ -1,0 +1,20 @@
+services:
+  minio-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minio-gateway
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - minio_gateway_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "${ASSETS_IP}:${DB_HOST}"
+
+networks:
+  minio_gateway_network:
+    driver: bridge
