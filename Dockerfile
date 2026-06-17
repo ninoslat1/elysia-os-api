@@ -53,8 +53,8 @@ COPY --from=build --chown=app:app /app/server.js ./server.js
 USER app
 
 ENV NODE_ENV=production \
-    PORT=5000
+    PORT=6000
 
-EXPOSE 5000
+EXPOSE 6000
 
 CMD ["bun", "run", "server.js"]
