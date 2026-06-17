@@ -1,8 +1,6 @@
 services:
   minio-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: minio-app:latest
     container_name: minio-gateway
     ports:
       - "5000:5000"
