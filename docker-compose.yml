@@ -3,7 +3,7 @@ services:
     image: minio-app:latest
     container_name: minio-gateway
     ports:
-      - "6000:6000"
+      - "4950:4950"
     env_file:
       - .env
     restart: always

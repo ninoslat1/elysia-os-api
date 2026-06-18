@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@elysia/cors": "^1.4.2",
+    "@elysiajs/cors": "^1.4.2",
     "@elysiajs/jwt": "^1.4.2",
     "@t3-oss/env-core": "^0.13.11",
     "drizzle-orm": "^0.45.2",
