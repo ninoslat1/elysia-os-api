@@ -15,6 +15,7 @@ export const listAllObjects = async (): Promise<Asset[]> => {
 
     if (!result.isTruncated) break;
     startAfter = result.contents?.at(-1)?.key;
+  // oxlint-disable-next-line no-constant-condition
   } while (true);
 
   return items;
