@@ -19,6 +19,29 @@ export const assetsRoute = new Elysia({
     },
   )
   .get(
+    "/v2/display/:areaId",
+    async ({ params, set, headers, jwt }) => {
+      const token = headers.authorization?.replace("Bearer ", "");
+
+      const payload = await jwt.verify(token);
+
+      if (!payload || payload.iss !== env.JWT_ISS || payload.aud !== env.JWT_AUD) {
+        set.status = 401;
+
+        return {
+          message: "Unauthorized",
+        };
+      }
+
+      return controller.display_v2(params.areaId);
+    },
+    {
+      params: t.Object({
+        areaId: t.String(),
+      }),
+    },
+  )
+  .get(
     "/display/:areaId",
     async ({ params, set, headers, jwt }) => {
       const token = headers.authorization?.replace("Bearer ", "");
@@ -33,7 +56,7 @@ export const assetsRoute = new Elysia({
         };
       }
 
-      return controller.display(params.areaId, set);
+      return controller.display(params.areaId);
     },
     {
       params: t.Object({

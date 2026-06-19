@@ -22,7 +22,7 @@ export class AssetsController {
     return result.file.stream();
   }
 
-  async display(uid: string, set: any) {
+  async display(uid: string) {
     const result = await this.assetsService.getDisplayAsset(uid);
 
     if (!result) {
@@ -44,5 +44,27 @@ export class AssetsController {
         "Content-Type": "video/mp4",
       },
     });
+  }
+
+  async display_v2(uid: string) {
+    const result = await this.assetsService.getDisplayAssetV2(uid);
+
+    if (!result) {
+      return new Response(
+        JSON.stringify({
+          message: "Asset not found",
+        }),
+        {
+          status: 404,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+
+    return Response.json({
+      url: result.url
+    })
   }
 }
