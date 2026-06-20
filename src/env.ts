@@ -16,6 +16,7 @@ export const env = createEnv({
     JWT_ISS: z.string().min(1),
     JWT_AUD: z.string().min(1),
     APP_PORT: z.string().min(1),
+    GRPC_PORT: z.string().min(1),
   },
 
   /**

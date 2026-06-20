@@ -8,7 +8,7 @@ const mstPoolConnection = mysql.createPool({
   host: env.DB_HOST,
   user: env.DB_USER,
   password: env.DB_PASS,
-  port: parseInt(env.DB_PORT ?? "3306"),
+  port: Number.parseInt(env.DB_PORT ?? "3306"),
   database: env.DB_MST,
 });
 

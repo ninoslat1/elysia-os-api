@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package minio;
+
+service MinioService {
+  rpc GetAreaAssetUrl (AreaRequest) returns (AssetUrlResponse);
+}
+
+message AreaRequest {
+  string areaUid = 1;
+}
+
+message AssetUrlResponse {
+  string url = 1;
+}
