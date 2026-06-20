@@ -1,11 +1,14 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 import cors from "@elysia/cors";
 import { Elysia } from "elysia";
-import { assetsRoute } from "./routes/serve";
+import { assetsRoute } from "./routes/serve.route";
+import { env } from "./env";
 
 const app = new Elysia()
   .use(cors())
   .use(assetsRoute)
-  .get("/", () => ({ message: "Flaplock API running" }))
-  .listen(3000);
+  .get("/", () => ({ message: "Object storage API running" }))
+  .listen(env.APP_PORT);
 
 console.log(`🦊 Server running at http://localhost:${app.server?.port}`);

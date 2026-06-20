@@ -53,8 +53,37 @@ COPY --from=build --chown=app:app /app/server.js ./server.js
 USER app
 
 ENV NODE_ENV=production \
-    PORT=3000
+    PORT=4950
 
-EXPOSE 3000
+EXPOSE 4950
 
 CMD ["bun", "run", "server.js"]
+
+    # ARG BUN_VERSION=1.2.15-alpine
+
+    # FROM oven/bun:${BUN_VERSION} AS deps
+    # WORKDIR /app
+    # COPY package.json bun.lock ./
+    # RUN bun install --frozen-lockfile
+
+    # FROM deps AS build
+    # COPY . .
+    # RUN bun build ./src/index.ts \
+    #     --minify \
+    #     --sourcemap=none \
+    #     --outfile server.js \
+    #     --target=bun
+
+    # FROM oven/bun:${BUN_VERSION} AS runtime
+    # WORKDIR /app
+
+    # COPY --from=build /app/server.js ./server.js
+
+    # USER bun
+
+    # ENV NODE_ENV=production \
+    #     PORT=4950
+
+    # EXPOSE 4950
+
+    # CMD ["bun", "run", "server.js"]
