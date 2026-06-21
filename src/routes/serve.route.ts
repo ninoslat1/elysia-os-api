@@ -16,6 +16,11 @@ export const assetsRoute = new Elysia({
       params: t.Object({
         key: t.String(),
       }),
+      detail: {
+        summary: "Download display asset",
+        description: "Download display asset by key",
+        tags: ["Asset"],
+      },
     },
   )
   .get(
@@ -27,6 +32,21 @@ export const assetsRoute = new Elysia({
       params: t.Object({
         areaId: t.String(),
       }),
+      detail: {
+        summary: "Fetch display asset (V2)",
+        description: "Fetch display asset based on area id parameters",
+        tags: ["Asset"],
+      },
+      response: {
+        200: t.Object({
+          url: t.String(),
+        }),
+        404: t.Object({
+          message: t.String({
+            default: "Asset not found",
+          }),
+        }),
+      },
     },
   )
   .get(
@@ -50,5 +70,25 @@ export const assetsRoute = new Elysia({
       params: t.Object({
         areaId: t.String(),
       }),
+      detail: {
+        summary: "Fetch display asset (V1)",
+        description: "Fetch display asset based on area id parameters",
+        tags: ["Asset"],
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+      },
+      response: {
+        200: t.Object({
+          url: t.String(),
+        }),
+        404: t.Object({
+          message: t.String({
+            default: "Asset not found",
+          }),
+        }),
+      },
     },
   );

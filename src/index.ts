@@ -1,11 +1,12 @@
 import cors from "@elysiajs/cors";
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 
 import { connectNodeAdapter } from "@connectrpc/connect-node";
 
 import minioGrpcRoute from "./grpc/minio";
 import { assetsRoute } from "./routes/serve.route";
 import { env } from "./env";
+import openapi from "@elysia/openapi";
 
 const handler = connectNodeAdapter({
   routes(router) {
@@ -15,33 +16,66 @@ const handler = connectNodeAdapter({
 
 const app = new Elysia()
   .use(cors())
+  .use(
+    openapi({
+      documentation: {
+        info: {
+          title: "MinIO Gateway API",
+          version: "1.0.0",
+        },
+        components: {
+          securitySchemes: {
+            bearerAuth: {
+              type: "http",
+              scheme: "bearer",
+              bearerFormat: "JWT",
+            },
+          },
+        },
+      },
+    }),
+  )
   .use(assetsRoute)
-  .get("/", () => ({
-    message: "Object storage API running",
-  }))
+  .get(
+    "/",
+    () => ({
+      message: "Object storage API running",
+    }),
+    {
+      detail: {
+        summary: "Check health",
+        description: "Check health in root route",
+        tags: ["Health"],
+      },
+      response: {
+        200: t.Object({
+          message: t.String({
+            default: "Obejct storage API running",
+          }),
+        }),
+      },
+    },
+  )
 
   .listen(env.APP_PORT);
 
-console.log(
-  `🦊 Server running at http://localhost:${app.server?.port}`
-);
+console.log(`🦊 Server running at http://localhost:${app.server?.port}`);
 
 Bun.serve({
   port: env.GRPC_PORT,
 
   fetch(req) {
     return new Promise((resolve) => {
-      handler(req as any, {
-        end(body: any) {
-          resolve(
-            new Response(body)
-          );
-        },
-      } as any);
+      handler(
+        req as any,
+        {
+          end(body: any) {
+            resolve(new Response(body));
+          },
+        } as any,
+      );
     });
   },
 });
 
-console.log(
-  `🚀 gRPC running at http://localhost:${env.GRPC_PORT}`
-);
+console.log(`🚀 gRPC running at http://localhost:${env.GRPC_PORT}`);

@@ -79,12 +79,12 @@ export class AssetsService {
       }
 
       const url = file.presign({
-        expiresIn: 60 * 60 * 24 * 7
-      })
+        expiresIn: 60 * 60 * 24 * 7,
+      });
 
       return {
         key,
-        url
+        url,
       };
     } catch (error) {
       console.error("[AssetService] [getDisplayAsset]", error);

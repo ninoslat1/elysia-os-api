@@ -64,7 +64,7 @@ export class AssetsController {
     }
 
     return Response.json({
-      url: result.url
-    })
+      url: result.url,
+    });
   }
 }
