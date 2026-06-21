@@ -4,22 +4,40 @@ export class AssetsController {
   constructor(private readonly assetsService = new AssetsService()) {}
 
   async download(key: string, set: any) {
-    const result = await this.assetsService.getDownloadFile(key);
+    try {
+      const result = await this.assetsService.getDownloadFile(key);
 
-    if (!result) {
-      set.status = 404;
+      if (!result) {
+        set.status = 404;
+        return {
+          message: "File not found",
+        };
+      }
+
+      const filename = key.split("/").pop() ?? "file";
+      const contentType = result.stat.type ?? "application/octet-stream";
+
+      return new Response(result.file.stream(), {
+        headers: {
+          "Content-Type": contentType,
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        set.status = 404;
+
+        return {
+          message: "Asset not found",
+        };
+      }
+
+      set.status = 500;
+
       return {
-        message: "File not found",
+        message: "Internal server error",
       };
     }
-
-    const filename = key.split("/").pop() ?? "file";
-
-    set.headers["Content-Type"] = result.stat.type ?? "application/octet-stream";
-
-    set.headers["Content-Disposition"] = `attachment; filename="${filename}"`;
-
-    return result.file.stream();
   }
 
   async display(uid: string) {

@@ -15,7 +15,17 @@ const handler = connectNodeAdapter({
 });
 
 const app = new Elysia()
-  .use(cors())
+  .onAfterHandle(({ set }) => {
+    set.headers["X-Content-Type-Options"] = "nosniff";
+    set.headers["X-Frame-Options"] = "DENY";
+    set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+  })
+  .use(
+    cors({
+      origin: ["http://localhost:5173", "http://localhost:3000"],
+      credentials: true,
+    }),
+  )
   .use(
     openapi({
       documentation: {
@@ -50,13 +60,12 @@ const app = new Elysia()
       response: {
         200: t.Object({
           message: t.String({
-            default: "Obejct storage API running",
+            default: "Object storage API running",
           }),
         }),
       },
     },
   )
-
   .listen(env.APP_PORT);
 
 console.log(`🦊 Server running at http://localhost:${app.server?.port}`);

@@ -21,6 +21,12 @@ export const assetsRoute = new Elysia({
         description: "Download display asset by key",
         tags: ["Asset"],
       },
+      response: {
+        200: t.Any(),
+        404: t.String({
+          default: "File not found",
+        }),
+      },
     },
   )
   .get(
@@ -91,4 +97,10 @@ export const assetsRoute = new Elysia({
         }),
       },
     },
-  );
+  )
+  .onAfterHandle(({ set }) => {
+    set.headers["x-content-type-options"] = "nosniff";
+    set.headers["x-frame-options"] = "DENY";
+    set.headers["referrer-policy"] = "strict-origin-when-cross-origin";
+    set.headers["x-xss-protection"] = "0";
+  });
