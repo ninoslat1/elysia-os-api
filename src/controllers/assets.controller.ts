@@ -1,3 +1,4 @@
+import { BadRequestError, NotFoundError } from "../lib/error";
 import { AssetsService } from "../services/assets.service";
 
 export class AssetsController {
@@ -8,10 +9,7 @@ export class AssetsController {
       const result = await this.assetsService.getDownloadFile(key);
 
       if (!result) {
-        set.status = 404;
-        return {
-          message: "File not found",
-        };
+        throw new NotFoundError("File not found");
       }
 
       const filename = key.split("/").pop() ?? "file";
@@ -24,65 +22,92 @@ export class AssetsController {
         },
       });
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof NotFoundError) {
         set.status = 404;
-
-        return {
-          message: "Asset not found",
-        };
+        return { message: error.message };
       }
 
+      console.error("[AssetsController][download]", error);
+
       set.status = 500;
+      return { message: "Internal server error" };
+    }
+  }
+
+  async display(uid: string, set: any) {
+    try {
+      const result = await this.assetsService.getDisplayAsset(uid);
+
+      if (!result) {
+        throw new NotFoundError("Asset not found");
+      }
+
+      return new Response(result.file.stream(), {
+        headers: {
+          "Content-Type": "video/mp4",
+        },
+      });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        set.status = 404;
+        return { message: error.message };
+      }
+
+      console.error("[AssetsController][display]", error);
+
+      set.status = 500;
+      return { message: "Internal server error" };
+    }
+  }
+
+  async display_v2(uid: string, set: any) {
+    try {
+      const result = await this.assetsService.getDisplayAssetV2(uid);
+
+      if (!result) {
+        throw new NotFoundError("Asset not found");
+      }
 
       return {
-        message: "Internal server error",
+        url: result.url,
       };
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        set.status = 404;
+        return { message: error.message };
+      }
+
+      console.error("[AssetsController][display_v2]", error);
+
+      set.status = 500;
+      return { message: "Internal server error" };
     }
   }
 
-  async display(uid: string) {
-    const result = await this.assetsService.getDisplayAsset(uid);
+  async uploadVideo(body: any, set: any) {
+    try {
+      const file = body.file;
 
-    if (!result) {
-      return new Response(
-        JSON.stringify({
-          message: "Asset not found",
-        }),
-        {
-          status: 404,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      if (!file) {
+        throw new BadRequestError("File is required");
+      }
+
+      const result = await this.assetsService.writeVideoFile(file);
+
+      return {
+        message: "Upload success",
+        data: result,
+      };
+    } catch (error) {
+      if (error instanceof BadRequestError) {
+        set.status = 400;
+        return { message: error.message };
+      }
+
+      console.error("[AssetsController][uploadVideo]", error);
+
+      set.status = 500;
+      return { message: "Internal server error" };
     }
-
-    return new Response(result.file.stream(), {
-      headers: {
-        "Content-Type": "video/mp4",
-      },
-    });
-  }
-
-  async display_v2(uid: string) {
-    const result = await this.assetsService.getDisplayAssetV2(uid);
-
-    if (!result) {
-      return new Response(
-        JSON.stringify({
-          message: "Asset not found",
-        }),
-        {
-          status: 404,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    }
-
-    return Response.json({
-      url: result.url,
-    });
   }
 }

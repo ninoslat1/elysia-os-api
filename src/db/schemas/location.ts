@@ -27,4 +27,5 @@ export const locationTable = mysqlTable("config", {
   uid: varchar("UID", { length: 50 }),
 
   code: varchar("Code", { length: 50 }),
+  videoUrl: varchar("VideoURL", { length: 50 }),
 });

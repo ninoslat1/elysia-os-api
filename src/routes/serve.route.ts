@@ -2,8 +2,10 @@ import Elysia, { t } from "elysia";
 import { AssetsController } from "../controllers/assets.controller";
 import { jwtPlugin } from "../plugins/jwt";
 import { env } from "../env";
+import type { DashboardToken } from "../types/token";
 
 const controller = new AssetsController();
+const FINANCE_ROLE = 3;
 
 export const assetsRoute = new Elysia({
   prefix: "/assets",
@@ -31,8 +33,8 @@ export const assetsRoute = new Elysia({
   )
   .get(
     "/v2/display/:areaId",
-    async ({ params }) => {
-      return controller.display_v2(params.areaId);
+    async ({ params, set }) => {
+      return controller.display_v2(params.areaId, set);
     },
     {
       params: t.Object({
@@ -70,7 +72,7 @@ export const assetsRoute = new Elysia({
         };
       }
 
-      return controller.display(params.areaId);
+      return await controller.display(params.areaId, set);
     },
     {
       params: t.Object({
@@ -95,6 +97,52 @@ export const assetsRoute = new Elysia({
             default: "Asset not found",
           }),
         }),
+      },
+    },
+  )
+  .post(
+    "/upload/:locationId",
+    async ({ body, set, jwt, headers }) => {
+      const token = headers.authorization?.replace("Bearer ", "");
+
+      const payload = await jwt.verify(token);
+
+      if (!payload) {
+        set.status = 401;
+
+        return {
+          message: "Unauthorized",
+        };
+      }
+
+      const dashboardToken = payload as DashboardToken;
+
+      if (dashboardToken.subrole === FINANCE_ROLE) {
+        set.status = 401;
+
+        return {
+          message: "Unauthorized Role",
+        };
+      }
+
+      return await controller.uploadVideo(body, set);
+    },
+    {
+      body: t.Object({
+        file: t.File(),
+      }),
+      params: t.Object({
+        locationId: t.String(),
+      }),
+      detail: {
+        summary: "Upload video asset",
+        description: "Upload video asset based on location id parameters",
+        tags: ["Asset"],
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
       },
     },
   )

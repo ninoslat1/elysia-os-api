@@ -16,8 +16,12 @@ export class AreaRepository {
 
       return result?.id ?? null;
     } catch (error) {
-      console.error("[AreaRepository] [findAreaByUid]", { uid, error });
-      return null;
+      console.error("[AreaRepository] [findAreaLocationIDByUid]", {
+        uid,
+        error,
+      });
+
+      throw error;
     }
   }
 }
