@@ -1,4 +1,5 @@
 import { BadRequestError, NotFoundError } from "../lib/error";
+import { writeVideoFile } from "../lib/minio";
 import { AssetsService } from "../services/assets.service";
 
 export class AssetsController {
@@ -92,7 +93,7 @@ export class AssetsController {
         throw new BadRequestError("File is required");
       }
 
-      const result = await this.assetsService.writeVideoFile(file);
+      const result = await writeVideoFile(file);
 
       return {
         message: "Upload success",
@@ -109,5 +110,32 @@ export class AssetsController {
       set.status = 500;
       return { message: "Internal server error" };
     }
+  }
+
+  async initUploadSession(body: any) {
+    const result = await this.assetsService.initUpload(body.fileName, body.totalChunks);
+
+    return result;
+  }
+
+  async uploadChunk(params: any, body: any, set: any) {
+    try {
+      await this.assetsService.uploadChunk(
+        params.uploadId,
+        params.index,
+        Buffer.from(await body.arrayBuffer()),
+      );
+
+      return { ok: true };
+    } catch (error) {
+      set.status = 500;
+      return { message: error instanceof Error ? error.message : "Upload chunk failed" };
+    }
+  }
+
+  async complete(params: any) {
+    const result = await this.assetsService.completeUpload(params.uploadId);
+
+    return result;
   }
 }

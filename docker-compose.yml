@@ -1,7 +1,8 @@
 services:
   minio-gateway:
-    image: minio-app:latest
-    container_name: minio-gateway
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "4950:4950"
     env_file:
@@ -11,6 +12,15 @@ services:
       - minio_gateway_network
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  clamav-worker:
+    build: .
+    container_name: clamav-worker
+    command: ["bun", "run", "worker.js"]
+    env_file:
+      - .env
+    networks:
+      - minio_gateway_network
 
 networks:
   minio_gateway_network:

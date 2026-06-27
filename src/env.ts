@@ -13,11 +13,17 @@ export const env = createEnv({
     DB_PORT: z.string().min(1),
     DB_MST: z.string().min(1),
     JWT_DISPLAY_KEY: z.string().min(1),
+    JWT_DASHBOARD_KEY: z.string().min(1),
     JWT_ISS: z.string().min(1),
     JWT_AUD: z.string().min(1),
     APP_PORT: z.string().min(1),
     GRPC_PORT: z.string().min(1),
     TEST_TOKEN: z.string().min(1),
+    CLAMAV_PORT: z.string().min(1),
+    CLAMAV_IP: z.string().min(1),
+    REDIS_HOST: z.string().min(1),
+    REDIS_PORT: z.string().min(1),
+    REDIS_PASS: z.string().min(1),
   },
 
   /**

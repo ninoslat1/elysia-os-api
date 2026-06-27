@@ -19,3 +19,13 @@ export interface PaginatedResponse<T> {
   data: T[];
   pagination: PaginationMeta;
 }
+
+export interface UploadSession {
+  uploadId: string;
+  key: string;
+  locationId: string;
+  chunkSize: number;
+  totalChunks: number;
+  uploadedParts: number[];
+  status: "UPLOADING" | "COMPLETED" | "FAILED";
+}

@@ -1,14 +1,15 @@
-import type { S3File } from "bun";
 import { minio } from "../lib/minio";
 import { AreaRepository } from "../repositories/area.repository";
 import { LocationRepository } from "../repositories/location.repository";
-import { BadRequestError, NotFoundError } from "../lib/error";
+import { NotFoundError } from "../lib/error";
 import { env } from "../env";
+import { AssetsRepository } from "../repositories/assets.repository";
 
 export class AssetsService {
   constructor(
     private readonly areaRepository = new AreaRepository(),
     private readonly locationRepository = new LocationRepository(),
+    private readonly assetRepository = new AssetsRepository(),
   ) {}
 
   async getDisplayAsset(uid: string) {
@@ -17,16 +18,12 @@ export class AssetsService {
 
     if (!areaId) {
       throw new NotFoundError("Area not found");
-      // console.error("[AssetService] [getDisplayAsset]", { uid, error: "Area not found" });
-      // return null;
     }
 
     const location = await this.locationRepository.findLocationByAreaId({ id: areaId });
 
     if (!location) {
       throw new NotFoundError("Lokasi not found");
-      // console.error("[AssetService] [getDisplayAsset]", { uid, error: "Lokasi not found" });
-      // return null;
     }
 
     key = location.videoUrl ? location.videoUrl : "spiout.mp4";
@@ -35,7 +32,6 @@ export class AssetsService {
       const file = minio.file(key);
 
       if (!(await file.exists())) {
-        // return null;
         throw new NotFoundError("Assets not found");
       }
 
@@ -56,23 +52,13 @@ export class AssetsService {
 
     if (!areaId) {
       throw new NotFoundError("Area not found");
-      // console.error("[AssetService] [getDisplayAsset]", { uid, error: "Area tidak ditemukan" });
-      // return null;
     }
 
     const location = await this.locationRepository.findLocationByAreaId({ id: areaId });
 
     if (!location) {
       throw new NotFoundError("Lokasi not found");
-      // console.error("[AssetService] [getDisplayAsset]", { uid, error: "Lokasi tidak ditemukan" });
-      // return null;
     }
-
-    // if (location.name.toLocaleLowerCase() === "balikpapan superblock") {
-    //   key = `bsb.mp4`;
-    // } else {
-    //   key = `spiout.mp4`;
-    // }
 
     key = location.videoUrl ? location.videoUrl : "spiout.mp4";
 
@@ -80,7 +66,6 @@ export class AssetsService {
       const file = minio.file(key);
 
       if (!(await file.exists())) {
-        // return null;
         throw new NotFoundError("Assets not found");
       }
 
@@ -111,30 +96,38 @@ export class AssetsService {
     };
   }
 
-  async writeVideoFile(file: S3File) {
-    if (file.size > 50 * 1024 * 1024) {
-      throw new BadRequestError("File size exceeds limit (50MB)");
-    }
+  async initUpload(fileName: string, totalChunks: number) {
+    const uploadId = crypto.randomUUID();
+    const key = `${env.BUCKET_NAME}/${fileName}/${uploadId}.mp4`;
 
-    if (!file.type.startsWith("video/")) {
-      throw new BadRequestError("Invalid file type");
-    }
-
-    const extension = file.name?.split(".").pop() || "mp4";
-
-    const filename = `videos/${crypto.randomUUID()}.${extension}`;
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    await minio.write(filename, buffer, {
-      type: file.type,
+    await this.assetRepository.createSession(uploadId, {
+      key,
+      totalChunks,
+      uploaded: [],
+      status: "UPLOADING",
     });
 
-    const url = `${env.BUCKET_URL}/${env.BUCKET_NAME}/${filename}`;
+    return { uploadId, key };
+  }
 
-    return {
-      key: filename,
-      url,
-    };
+  async uploadChunk(uploadId: string, index: number, buffer: Buffer) {
+    const session = await this.assetRepository.getSession(uploadId);
+
+    if (!session) throw new NotFoundError("Session not found");
+
+    await minio.write(`${session.key}.part${index}`, buffer);
+
+    session.uploaded.push(index);
+
+    await this.assetRepository.updateSession(uploadId, session);
+  }
+
+  async completeUpload(uploadId: string) {
+    const session = await this.assetRepository.getSession(uploadId);
+    if (!session) throw new NotFoundError("Session not found");
+    session.status = "UPLOADED";
+    await this.assetRepository.updateSession(uploadId, session);
+    await this.assetRepository.pushScanQueue(session.key);
+    return session;
   }
 }

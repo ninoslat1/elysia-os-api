@@ -26,6 +26,12 @@ RUN bun build ./src/index.ts \
     --outfile server.js \
     --target=bun
 
+RUN bun build ./src/workers/clamav.worker.ts \
+    --minify \
+    --sourcemap=none \
+    --outfile worker.js \
+    --target=bun
+
 FROM debian:bookworm-slim@sha256:b29f74a267526ae6ea104eed6c46133b0ca70ce812525df8cd5817698f0a624a AS runtime-base
 RUN apt-get update && apt-get install -y \
     libc6 \
@@ -49,6 +55,7 @@ WORKDIR /app
 
 COPY --from=bun-upx /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=build --chown=app:app /app/server.js ./server.js
+COPY --from=build --chown=app:app /app/worker.js ./worker.js
 
 USER app
 
@@ -58,32 +65,3 @@ ENV NODE_ENV=production \
 EXPOSE 4950
 
 CMD ["bun", "run", "server.js"]
-
-    # ARG BUN_VERSION=1.2.15-alpine
-
-    # FROM oven/bun:${BUN_VERSION} AS deps
-    # WORKDIR /app
-    # COPY package.json bun.lock ./
-    # RUN bun install --frozen-lockfile
-
-    # FROM deps AS build
-    # COPY . .
-    # RUN bun build ./src/index.ts \
-    #     --minify \
-    #     --sourcemap=none \
-    #     --outfile server.js \
-    #     --target=bun
-
-    # FROM oven/bun:${BUN_VERSION} AS runtime
-    # WORKDIR /app
-
-    # COPY --from=build /app/server.js ./server.js
-
-    # USER bun
-
-    # ENV NODE_ENV=production \
-    #     PORT=4950
-
-    # EXPOSE 4950
-
-    # CMD ["bun", "run", "server.js"]

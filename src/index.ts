@@ -4,9 +4,10 @@ import { Elysia, t } from "elysia";
 import { connectNodeAdapter } from "@connectrpc/connect-node";
 
 import minioGrpcRoute from "./grpc/minio";
-import { assetsRoute } from "./routes/serve.route";
 import { env } from "./env";
 import openapi from "@elysia/openapi";
+import { displayAssetsRoute } from "./routes/display.route";
+import { dashboardAssetsRoute } from "./routes/dashboard.route";
 
 const handler = connectNodeAdapter({
   routes(router) {
@@ -45,7 +46,8 @@ const app = new Elysia()
       },
     }),
   )
-  .use(assetsRoute)
+  .use(displayAssetsRoute)
+  .use(dashboardAssetsRoute)
   .get(
     "/",
     () => ({
