@@ -1,7 +1,6 @@
 import { redisClient } from "../lib/redis";
 
 export class AssetsRepository {
-  constructor() {}
 
   async createSession(id: string, data: any) {
     await redisClient.set(`upload:${id}`, JSON.stringify(data));

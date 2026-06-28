@@ -23,7 +23,7 @@ export const dashboardAssetsRoute = new Elysia({
   )
   .post("/upload/:uploadId/complete", ({ params }) => controller.complete(params))
   .post(
-    "/upload/:locationId",
+    "/upload/location/:locationId",
     async ({ body, dashboardToken, set }) => {
       if (dashboardToken?.subrole === FINANCE_ROLE) {
         set.status = 401;

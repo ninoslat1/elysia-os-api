@@ -1,4 +1,4 @@
-import net from "net";
+import net from "node:net";
 import { env } from "../env";
 
 export function scanBuffer(buffer: Buffer): Promise<boolean> {
