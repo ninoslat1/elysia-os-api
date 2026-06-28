@@ -1,7 +1,6 @@
 import { redisClient } from "../lib/redis";
 
 export class AssetsRepository {
-
   async createSession(id: string, data: any) {
     await redisClient.set(`upload:${id}`, JSON.stringify(data));
   }
@@ -16,6 +15,11 @@ export class AssetsRepository {
   }
 
   async pushScanQueue(key: string) {
-    await redisClient.lpush("queue:scan", key);
+    await redisClient.lpush(
+      "queue:scan",
+      JSON.stringify({
+        key,
+      }),
+    );
   }
 }

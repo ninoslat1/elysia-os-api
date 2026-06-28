@@ -11,15 +11,23 @@ export const dashboardAssetsRoute = new Elysia({
 })
   .use(dashboardAuthMiddleware)
 
-  .post("/upload", async ({ body }) => {
-    return await controller.initUploadSession(body);
-  })
   .post(
-    "/upload/:uploadId/chunk/:index",
-    ({ params, body, set }) => controller.uploadChunk(params, body, set),
-    {
-      body: t.File(),
+    "/upload",
+    async ({ body }) => {
+      return await controller.initUploadSession(body);
     },
+    {
+      body: t.Object({
+        fileName: t.Object({
+          name: t.String(),
+          type: t.String(),
+        }),
+        totalChunks: t.String(),
+      }),
+    },
+  )
+  .post("/upload/:uploadId/chunk/:index", ({ params, request, set }) =>
+    controller.uploadChunk(params, request, set),
   )
   .post("/upload/:uploadId/complete", ({ params }) => controller.complete(params))
   .post(

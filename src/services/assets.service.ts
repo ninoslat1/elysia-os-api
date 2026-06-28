@@ -2,7 +2,6 @@ import { minio } from "../lib/minio";
 import { AreaRepository } from "../repositories/area.repository";
 import { LocationRepository } from "../repositories/location.repository";
 import { NotFoundError } from "../lib/error";
-import { env } from "../env";
 import { AssetsRepository } from "../repositories/assets.repository";
 
 export class AssetsService {
@@ -96,9 +95,10 @@ export class AssetsService {
     };
   }
 
-  async initUpload(fileName: string, totalChunks: number) {
+  async initUpload(fileName: { name: string; type: string }, totalChunks: number) {
     const uploadId = crypto.randomUUID();
-    const key = `${env.BUCKET_NAME}/${fileName}/${uploadId}.mp4`;
+    const extension = fileName.name.split(".").pop() ?? "mp4";
+    const key = `${uploadId}/${extension}`;
 
     await this.assetRepository.createSession(uploadId, {
       key,
@@ -124,10 +124,52 @@ export class AssetsService {
 
   async completeUpload(uploadId: string) {
     const session = await this.assetRepository.getSession(uploadId);
-    if (!session) throw new NotFoundError("Session not found");
+
+    if (!session) {
+      throw new NotFoundError("Session not found");
+    }
+
+    const chunks: Buffer[] = [];
+
+    // 1. read all chunks
+    for (let i = 1; i <= session.totalChunks; i++) {
+      const partKey = `${session.key}.part${i}`;
+
+      const file = minio.file(partKey);
+
+      if (!(await file.exists())) {
+        throw new Error(`Missing chunk ${i}`);
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+
+      chunks.push(buffer);
+    }
+
+    // 2. merge chunks
+    const merged = Buffer.concat(chunks);
+
+    // 3. write final file
+    await minio.write(session.key, merged, {
+      type: "video/mp4",
+    });
+
+    // 4. cleanup chunks
+    for (let i = 1; i <= session.totalChunks; i++) {
+      await minio.file(`${session.key}.part${i}`).delete();
+    }
+
+    // 5. update session
     session.status = "UPLOADED";
+
     await this.assetRepository.updateSession(uploadId, session);
+
+    // 6. queue scan
     await this.assetRepository.pushScanQueue(session.key);
-    return session;
+
+    return {
+      success: true,
+      key: session.key,
+    };
   }
 }

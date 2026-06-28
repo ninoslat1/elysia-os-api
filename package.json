@@ -4,7 +4,9 @@
   "type": "module",
   "module": "index.ts",
   "scripts": {
-    "dev": "bun run --watch ./src/index.ts",
+    "dev:api": "bun --watch run src/index.ts",
+    "dev:worker": "bun --watch run src/workers/clamav.worker.ts",
+    "dev": "concurrently \"bun run dev:api\" \"bun run dev:worker\"",
     "fmt": "oxfmt",
     "lint": "oxlint",
     "sonar": "sonar-scanner"
@@ -25,6 +27,7 @@
     "@bufbuild/protoc-gen-es": "^2.12.0",
     "@connectrpc/protoc-gen-connect-es": "^1.7.0",
     "@types/bun": "latest",
+    "concurrently": "^10.0.3",
     "oxfmt": "^0.53.0",
     "oxlint": "^1.68.0",
     "sonar-scanner": "^3.1.0"

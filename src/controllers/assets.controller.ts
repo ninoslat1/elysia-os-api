@@ -118,15 +118,23 @@ export class AssetsController {
     return result;
   }
 
-  async uploadChunk(params: any, body: any, set: any) {
+  async uploadChunk(params: any, request: Request, set: any) {
     try {
-      await this.assetsService.uploadChunk(
-        params.uploadId,
-        params.index,
-        Buffer.from(await body.arrayBuffer()),
-      );
+      const stream = request.body;
 
-      return { ok: true };
+      if (!stream) {
+        set.status = 404;
+
+        return {
+          message: "No Body Stream",
+        };
+      }
+
+      const buffer = Buffer.from(await new Response(stream).arrayBuffer());
+
+      await this.assetsService.uploadChunk(params.uploadId, params.index, buffer);
+
+      return { message: "Chunk uploaded" };
     } catch (error) {
       set.status = 500;
       return { message: error instanceof Error ? error.message : "Upload chunk failed" };
