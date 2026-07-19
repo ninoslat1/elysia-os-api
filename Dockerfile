@@ -26,11 +26,11 @@ RUN bun build ./src/index.ts \
     --outfile server.js \
     --target=bun
 
-RUN bun build ./src/workers/clamav.worker.ts \
-    --minify \
-    --sourcemap=none \
-    --outfile worker.js \
-    --target=bun
+# RUN bun build ./src/workers/clamav.worker.ts \
+#     --minify \
+#     --sourcemap=none \
+#     --outfile worker.js \
+#     --target=bun
 
 FROM debian:bookworm-slim@sha256:b29f74a267526ae6ea104eed6c46133b0ca70ce812525df8cd5817698f0a624a AS runtime-base
 RUN apt-get update && apt-get install -y \

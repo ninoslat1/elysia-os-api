@@ -36,7 +36,7 @@ export const authDisplayMiddleware = new Elysia()
 export const dashboardAuthMiddleware = new Elysia()
   .use(jwtDashboardPlugin)
   .decorate("dashboardToken", null as DashboardToken | null)
-  .resolve(async ({ headers, jwt, set }) => {
+  .resolve(async ({ headers, dashboard_jwt, set }) => {
     const authHeader = headers.authorization;
 
     if (!authHeader?.startsWith("Bearer ")) {
@@ -46,7 +46,7 @@ export const dashboardAuthMiddleware = new Elysia()
 
     const token = authHeader.replace("Bearer ", "");
 
-    const payload = await jwt.verify(token);
+    const payload = await dashboard_jwt.verify(token);
 
     if (!payload) {
       set.status = 401;

@@ -11,7 +11,7 @@ export const jwtDisplayPlugin = new Elysia().use(
 
 export const jwtDashboardPlugin = new Elysia().use(
   jwt({
-    name: "jwt",
+    name: "dashboard_jwt",
     secret: env.JWT_DASHBOARD_KEY,
   }),
 );

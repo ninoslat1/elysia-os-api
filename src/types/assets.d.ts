@@ -1,3 +1,5 @@
+import type { S3File } from "bun";
+
 export interface Asset {
   key: string;
   filename: string;
@@ -28,4 +30,11 @@ export interface UploadSession {
   totalChunks: number;
   uploadedParts: number[];
   status: "UPLOADING" | "COMPLETED" | "FAILED";
+}
+
+export interface AsssetWriteSession {
+  file: S3File,
+  chunkIndex: number,
+  nonce: string
+  sha256: string
 }

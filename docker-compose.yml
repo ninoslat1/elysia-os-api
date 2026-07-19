@@ -13,14 +13,14 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  clamav-worker:
-    build: .
-    container_name: clamav-worker
-    command: ["bun", "run", "worker.js"]
-    env_file:
-      - .env
-    networks:
-      - minio_gateway_network
+  # clamav-worker:
+  #   build: .
+  #   container_name: clamav-worker
+  #   command: ["bun", "run", "worker.js"]
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - minio_gateway_network
 
 networks:
   minio_gateway_network:

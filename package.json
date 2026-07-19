@@ -4,14 +4,13 @@
   "type": "module",
   "module": "index.ts",
   "scripts": {
-    "dev:api": "bun --watch run src/index.ts",
-    "dev:worker": "bun --watch run src/workers/clamav.worker.ts",
-    "dev": "concurrently \"bun run dev:api\" \"bun run dev:worker\"",
+    "dev": "bun --watch run src/index.ts",
     "fmt": "oxfmt",
     "lint": "oxlint",
     "sonar": "sonar-scanner"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1090.0",
     "@connectrpc/connect": "^2.1.2",
     "@connectrpc/connect-node": "^2.1.2",
     "@elysia/openapi": "^1.4.15",
